@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OUTILS JUSTIFIT</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f5f7;
+            font-family: Arial, sans-serif;
+            color: #333;
+            position: relative;
+        }
+        .navbar {
+            background-color: #001d50;
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .navbar a {
+            color: #ffffff;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .navbar a:hover {
+            background-color: #4c7b7b;
+            border-radius: 5px;
+        }
+        .container1 {
+            padding-top: 60px; /* Compense la barre de navigation */
+            background-color: #001d50;
+            padding: 30px;
+            border-radius: 10px;
+            width: 600px;
+            text-align: left;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #ffd700;
+            font-size: 26px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #ffffff;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        label {
+            font-weight: 600;
+            margin-top: 15px;
+            display: block;
+            color: #ffffff;
+        }
+ textarea {
+    width: 100%;
+    height: 400px; /* Ajustez la hauteur ici selon vos besoins */
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    font-size: 14px;
+    /* Vous pouvez garder cette partie inchangée ou ajuster si nécessaire */
+}
+        input[type="button"], button {
+            background-color: #66a2a0;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+            font-weight: 600;
+            width: 100%;
+        }
+        input[type="button"]:hover, button:hover {
+            background-color: #4c7b7b;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4caf50;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 10;
+        }
+        .notification.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        #generatedCodeContainer {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f4f8;
+            color: #333;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', Courier, monospace;
+            display: none;
+        }
+        #generatedCodeContainer::before {
+            content: "Votre code ici :";
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+            color: #001d50;
+        }
+ 
+    </style>
+</head>
+<body>
+
+<div class="notification" id="notification">Texte copié dans le presse-papiers !</div>
+
+<div class="container1">
+    <h1>OUTILS JUSTIFIT</h1>
+<nav class="navbar">
+  <a href="index.html">Call To Action</a>
+  <a href="ctabouton.html">CTA Bouton</a>
+  <a href="nofollowcode.html">No Follow</a>
+  <a href="sourcearticle.html">Source</a>
+  <a href="promptjuridique.html">Ancien Outil</a>
+  <a href="generer-prompt.html" class="tab-btn">Générer Prompt</a>
+  <a href="openmultiurl.html" class="tab-btn">URL Multiple</a>
+</nav>
+    <form>
+        <label for="language">Choisissez la langue :</label>
+        <select id="language" onchange="setLanguage()">
+            <option value="fr">Justifit FR</option>
+            <option value="uk">Justifit UK</option>
+        </select>
+
+        <label for="question">Collez votre texte [code source] ici : C'est pour encadrer le contenu d'un CTA</label>
+        <textarea id="question" name="question" placeholder="Exemple : <strong>Bon à savoir :</strong>Le dépôt d’une main courante est entièrement gratuit... "></textarea>
+        
+        <input type="button" value="Copier" onclick="calling()">
+    </form>
+    <div id="generatedCodeContainer"></div>
+
+<!--Voici le code complet qui intègre tous les scripts fonctionnels, en ajoutant également la nouvelle fonctionnalité pour gérer le bouton CTA sans capturer le texte associé à l'URL.-->
+
+    <script>
+        function calling() {
+            var action1 = '<div class="bloc-bonsavoir">';
+            var action5 = '<div class="desc-bonsavoir">';
+            var action7 = '</div></div>';
+            var question = document.getElementById("question").value;
+
+            // Détection des URLs spécifiques pour le bouton CTA
+            var ctabtnRegexA = /<a href="(https:\/\/www\.justifit\.fr\/avocats\/q\/[^\s]+)">[^<]*<\/a>/g;
+            var ctabtnRegexB = /<a href="(https:\/\/www\.justifit\.fr\/trouver\/avocats\/france\/[^\s]+)">[^<]*<\/a>/g;
+
+            var ctabtnMatchA = question.match(ctabtnRegexA);
+            var ctabtnMatchB = question.match(ctabtnRegexB);
+            var ctabtnUrl = ctabtnMatchA ? ctabtnMatchA[0].match(/href="([^"]+)"/)[1] : (ctabtnMatchB ? ctabtnMatchB[0].match(/href="([^"]+)"/)[1] : null);
+
+            // Gérer la section "Points clés à retenir"
+            var pointsRegex = /<strong>Points clés à retenir\s*:\s*<\/strong>\s*<ul>([\s\S]*?)<\/ul>/g;
+            var result = question.replace(pointsRegex, function(match, content) {
+                // Créer le code ctabtn si une URL est trouvée
+                var ctabtnCode = ctabtnUrl ? `[ctabtn url="${ctabtnUrl}" text="Trouvez mon avocat" target="_blank" follow="follow" color="blue"]` : '';
+                return ctabtnCode + '<blockquote><strong>POINTS CLÉS À RETENIR :</strong>' + '<ul>' + content + '</ul></blockquote>';
+            });
+
+            // Gérer la section "À retenir :"
+            var retenirRegex = /<strong>À retenir\s*:\s*([^<]+)<\/strong>\s*(<ul>([\s\S]*?)<\/ul>|([^<]+))/g;
+            result = result.replace(retenirRegex, function(match, question, listContent, _, paragraphContent) {
+                var formattedQuestion = '<h2><strong>À RETENIR : ' + question.trim() + '</strong></h2>';
+                var contentBlock;
+
+                // Vérifier si c'est suivi d'une liste à puce ou d'un paragraphe
+                if (listContent) {
+                    contentBlock = '<blockquote>' + formattedQuestion + listContent + '</blockquote>';
+                } else {
+                    contentBlock = '<blockquote>' + formattedQuestion + paragraphContent.trim() + '</blockquote>';
+                }
+
+                return contentBlock;
+            });
+
+// Améliorer la détection des titleslist
+var titlesList = [
+    "Key Takeaway:", "Bon à savoir :", "À noter :", "À savoir :", "Important :", "Nos conseils :", "a noter :", "Conseils :", "Strategic insight:", "Strategic tip:", "a savoir :", 
+    "Attention :", "Remarque :", "Remember:", "Beware:", "Advice:", "Caution:", "Did you know?", "Enforcement insight:", "Cost insight:", "Evidence protection tip:",
+    "Exception:", "Insight:", "Tip:", "Good to know:", "Word to the wise:", "Expert insight:", "Evidence tip:", "Compensation insight:", "Defence strategy tip:", "Access to justice tip:",
+    "Pro tip:", "Noteworthy:", "Key consideration:", "Prudent approach:", "Practical consideration:", "Important:", "Consideration:", "Crucial:", "Power tip:", "Negotiation tip:",
+];
+
+titlesList.forEach(function(title) {
+    var regex = new RegExp(`(<strong>${title}\\s*:?\\s*</strong>)([^<\\n]*)`, 'g');
+    result = result.replace(regex, function(match, fullMatch, content) {
+        return action1 + '<div class="title-bonsavoir"><strong>' + title + '</strong></div>' +
+               action5 + content.trim() + action7;
+    });
+});
+
+            // Gérer la section "Sources"
+            var sourcesRegex = /<strong>Sources\s*:\s*<\/strong>([\s\S]*?)(?=<strong>|$)/g;
+            result = result.replace(sourcesRegex, function(match, sourceContent) {
+                const urls = sourceContent.match(/<a href="(.*?)">(.*?)<\/a>/g);
+                if (urls) {
+                    const formattedSources = urls.map(url => {
+                        const linkMatch = url.match(/<a href="(.*?)">(.*?)<\/a>/);
+                        const domain = new URL(linkMatch[1]).hostname.replace('www.', '');
+                        return `${domain} -- ${linkMatch[1]}`;
+                    }).join(' | ');
+                    return `[article_sources list="${formattedSources}"]`;
+                }
+                return '';
+            });
+
+            // Affichage du résultat
+            document.getElementById('generatedCodeContainer').textContent = result;
+            document.getElementById('generatedCodeContainer').style.display = 'block';
+
+            // Copier le résultat dans le presse-papiers
+            var textarea = document.createElement("textarea");
+            textarea.value = result;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            textarea.remove();
+
+            showNotification();
+        }
+
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        function setLanguage() {
+            const language = document.getElementById("language").value;
+            if (language === "fr") {
+                document.getElementById("question").value = ''; // Reset textarea
+                calling = calling; // Appel de la fonction pour FR
+            } else {
+                document.getElementById("question").value = ''; // Reset textarea
+                calling = callingUK; // Appel de la fonction pour UK
+            }
+        }
+    </script>
+</div>
+<footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+    &copy; RoberiX 2025
+</footer>
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+  window.JF_CHAT_CONFIG = {
+    room: "JUSTIFIT-AIDE",
+    firebaseConfig: {
+      apiKey: "AIzaSyDMTIVwbD7--cp504S8ViLQL7l-8AXPyJg",
+      authDomain: "outiljustifit.firebaseapp.com",
+      databaseURL: "https://outiljustifit-default-rtdb.firebaseio.com",
+      projectId: "outiljustifit",
+      storageBucket: "outiljustifit.firebasestorage.app",
+      messagingSenderId: "581082282504",
+      appId: "1:581082282504:web:2f1d3a3e7a8fbe5119efbd"
+    },
+       notificationSoundUrl: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"
+  };
+</script>
+
+<link rel="stylesheet" href="chat-widget.css">
+<script src="chat-widget.js"></script>
+
+</body>
+</html>

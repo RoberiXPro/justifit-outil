@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>OUTILS JUSTIFIT — Sources d’Articles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f3f5f7;
+      --nav:#001d50;
+      --accent:#66a2a0;
+      --accent-hover:#4c7b7b;
+      --text:#333;
+      --radius:12px;
+      --shadow:0 6px 18px rgba(0,0,0,.15);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+
+    /* Navbar */
+    .navbar{
+      position:fixed; top:0; left:0; right:0; z-index:1000;
+      background:var(--nav); padding:10px 12px;
+      display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+    }
+    .navbar a{
+      color:#fff; text-decoration:none; font-weight:700;
+      padding:10px 16px; border-radius:6px; transition:.25s;
+    }
+    .navbar a:hover{ background:var(--accent-hover) }
+   
+    /* Layout */
+    .wrap{ padding:100px 16px 40px; display:flex; justify-content:center; }
+    .card{
+      background:var(--nav); color:#fff; width:100%; max-width:760px;
+      border-radius:var(--radius); padding:28px; box-shadow:var(--shadow);
+      animation:fadeIn .5s ease;
+    }
+    @keyframes fadeIn{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:translateY(0)}}
+    h2{
+      margin:0 0 8px; text-align:center; font-size:26px; font-weight:800;
+    }
+    .subtitle{ text-align:center; opacity:.9; font-size:14px; margin-bottom:18px; }
+    .hr{ height:3px; width:64px; background:var(--accent); border-radius:2px; margin:10px auto 20px; }
+
+    /* Form */
+    label{ display:block; font-weight:700; margin-bottom:8px; }
+    textarea, input[type="text"]{
+      width:100%; border:1px solid #ced4da; border-radius:8px;
+      background:#f8fafc; color:#333; padding:10px 12px; font-size:14px;
+      transition:border .25s, box-shadow .25s, transform .06s;
+    }
+    textarea{ min-height:140px; resize:vertical }
+    textarea:focus, input[type="text"]:focus{
+      outline:none; border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(102,162,160,.28);
+    }
+
+    .row{ display:grid; grid-template-columns: 1fr; gap:12px; margin-top:14px; }
+    .actions{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+    .btn{
+      border:none; cursor:pointer; font-weight:800; letter-spacing:.2px;
+      padding:12px 18px; border-radius:10px; font-size:16px; color:#fff;
+      background:linear-gradient(135deg,var(--accent), var(--accent-hover));
+      transition:transform .18s, box-shadow .18s, filter .18s;
+      box-shadow:0 8px 16px rgba(0,0,0,.18);
+    }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 12px 22px rgba(0,0,0,.22); }
+    .btn:active{ transform:translateY(0); filter:saturate(1.05); }
+
+    .output{
+      margin-top:16px; background:#f0f4f8; color:#333;
+      border-radius:8px; padding:14px; font-family:"Courier New", monospace;
+      word-break:break-word;
+      display:none;
+    }
+    .muted{ color:#d3dae3; font-size:12px; text-align:center; margin-top:10px; }
+
+    /* Toast */
+    .toast{
+      position:fixed; top:20px; left:50%; transform:translateX(-50%);
+      background:#4caf50; color:#fff; padding:10px 18px;
+      border-radius:6px; font-size:14px; opacity:0; visibility:hidden;
+      transition:opacity .3s, visibility .3s; z-index:2000;
+      box-shadow:0 6px 14px rgba(0,0,0,.2);
+    }
+    .toast.show{ opacity:1; visibility:visible; }
+
+    footer{ text-align:center; color:#999; font-size:.85rem; padding:10px 12px 24px; }
+
+    @media (max-width:520px){
+      .card{ padding:20px }
+      .navbar a{ padding:8px 12px; font-size:.95rem }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html">Call To Action</a>
+  <a href="ctabouton.html">CTA Bouton</a>
+  <a href="nofollowcode.html">No Follow</a>
+  <a href="sourcearticle.html">Source</a>
+  <a href="promptjuridique.html">Ancien Outil</a>
+  <a href="generer-prompt.html" class="tab-btn">Générer Prompt</a>
+  <a href="openmultiurl.html" class="tab-btn">URL Multiple</a>
+</nav>
+
+  <div id="toast" class="toast">Copié dans le presse‑papiers ✅</div>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Outils pour les Sources d’Articles</h2>
+      <div class="subtitle">Collez toutes vos URLs ci-dessous, on s’occupe du format.</div>
+      <div class="hr"></div>
+
+      <div class="row">
+        <div>
+          <label for="bulkUrls">Collez vos URLs (une par ligne)</label>
+          <textarea id="bulkUrls" placeholder="Exemple :
+https://www.gov.uk/make-will
+https://www.gov.uk/inherits-someone-dies-without-will
+https://www.citizensadvice.org.uk/family/death-and-wills/wills/
+https://www.gov.uk/applying-for-probate"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" onclick="generateShortcode()">Générer le shortcode</button>
+        <button class="btn" onclick="copyShortcode()">Copier</button>
+      </div>
+
+      <div id="output" class="output"></div>
+      <div class="muted">Astuce : vous pouvez aussi coller des URLs sans “http(s)://”, elles seront corrigées automatiquement.</div>
+    </section>
+  </main>
+
+  <footer>&copy; RoberiX 2025</footer>
+
+  <script>
+    function normalizeUrl(raw){
+      const t = (raw||'').trim();
+      if(!t) return '';
+      try{
+        const hasProto = /^https?:\/\//i.test(t);
+        const u = new URL(hasProto ? t : 'https://' + t);
+        // On retourne l'URL telle que saisie (avec https si absent)
+        return u.href;
+      }catch(e){
+        return '';
+      }
+    }
+
+    function hostnameFrom(url){
+      try{
+        const u = new URL(url);
+        return u.hostname.replace(/^www\./,''); // ex: citizensadvice.org.uk / gov.uk
+      }catch(e){
+        return '';
+      }
+    }
+
+    function generateShortcode(){
+      const raw = document.getElementById('bulkUrls').value || '';
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+      // Normalisation, déduplication par URL normalisée, conservation de l’ordre
+      const seen = new Set();
+      const pairs = [];
+
+      for(const line of lines){
+        const normalized = normalizeUrl(line);
+        if(!normalized) continue;
+        if(seen.has(normalized)) continue;
+        seen.add(normalized);
+
+        const host = hostnameFrom(normalized);
+        if(!host) continue;
+
+        pairs.push(host + ' -- ' + normalized);
+      }
+
+      const shortcode = `[article_sources list="${pairs.join(' | ')}"]`;
+      const out = document.getElementById('output');
+      out.style.display = 'block';
+      out.textContent = shortcode;
+
+      return shortcode;
+    }
+
+    function copyShortcode(){
+      const val = document.getElementById('output').textContent.trim() || generateShortcode();
+      if(!val) return;
+
+      navigator.clipboard.writeText(val).then(()=>{
+        showToast('Copié dans le presse‑papiers ✅');
+      }).catch(()=>{
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = val; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); showToast('Copié dans le presse‑papiers ✅'); }
+        catch(e){}
+        ta.remove();
+      });
+    }
+
+    function showToast(msg){
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(()=> t.classList.remove('show'), 1800);
+    }
+  </script>
+  <!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+  window.JF_CHAT_CONFIG = {
+    room: "JUSTIFIT-AIDE",
+    firebaseConfig: {
+      apiKey: "AIzaSyDMTIVwbD7--cp504S8ViLQL7l-8AXPyJg",
+      authDomain: "outiljustifit.firebaseapp.com",
+      databaseURL: "https://outiljustifit-default-rtdb.firebaseio.com",
+      projectId: "outiljustifit",
+      storageBucket: "outiljustifit.firebasestorage.app",
+      messagingSenderId: "581082282504",
+      appId: "1:581082282504:web:2f1d3a3e7a8fbe5119efbd"
+    },
+       notificationSoundUrl: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"
+  };
+</script>
+
+<link rel="stylesheet" href="chat-widget.css">
+<script src="chat-widget.js"></script>
+</body>
+</html>

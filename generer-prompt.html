@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Générer Prompt — OUTILS JUSTIFIT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f3f5f7;
+      --nav:#001d50;
+      --accent:#66a2a0;
+      --accent-hover:#4c7b7b;
+      --ink:#333;
+      --card:#001d50;         /* carte sombre pour homogénéité avec tes pages */
+      --cardText:#ffffff;
+      --radius:12px;
+      --shadow:0 6px 18px rgba(0,0,0,.15);
+
+      --primary:#0066ff; --primary-600:#0055d4;
+      --soft:#f5f7fa; --line:#e5e7eb; --accentMono:#e8f0fe;
+
+      /* Mode SEO */
+      --seo-bg:#fff7ea;       /* fond page */
+      --seo-card:#fff7ea;     /* fond carte */
+      --seo-border:#facc15;
+      --seo-ink:#233044;
+    }
+
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg); color:var(--ink); }
+
+    /* NAVBAR (même style que tes autres pages) */
+    .navbar{
+      position:fixed; top:0; left:0; right:0; z-index:1000;
+      background:var(--nav); padding:10px 0; text-align:center;
+    }
+    .navbar a{
+      color:#fff; text-decoration:none; font-weight:bold;
+      padding:10px 20px; border-radius:5px; display:inline-block; transition:.25s;
+    }
+    .navbar a:hover{ background:var(--accent-hover) }
+    .navbar .ask-btn{
+      background:linear-gradient(135deg,#6a11cb,#2575fc); margin-left:10px;
+    }
+    .navbar .ask-btn:hover{
+      background:linear-gradient(135deg,#2575fc,#6a11cb);
+      transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.25);
+    }
+
+    /* Layout */
+    main{ padding:100px 16px 40px; display:flex; justify-content:center; }
+    .card{
+      width:100%; max-width:980px; background:var(--card); color:var(--cardText);
+      border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:24px; border:1px solid transparent;
+      transition: background .25s ease, color .25s ease, border-color .25s ease;
+    }
+    h1{ margin:0 0 6px; text-align:center; font-size:26px; color:#fff; }
+    .subtitle{ text-align:center; opacity:.9; font-size:14px; margin-bottom:12px; color:#dbe5ff; }
+    .hr{ height:3px; width:64px; background:var(--accent); border-radius:2px; margin:8px auto 16px;}
+
+    /* Mode selector */
+    .mode{
+      display:flex; gap:.5rem; background:#0f2a66; border:1px solid rgba(255,255,255,.14);
+      padding:.5rem; border-radius:12px; margin-bottom:1rem; flex-wrap:wrap; justify-content:center;
+    }
+    .mode input{display:none}
+    .seg{
+      padding:.55rem .9rem; border-radius:10px; cursor:pointer; user-select:none;
+      border:1px solid transparent; font-weight:700; color:#fff; background:transparent;
+    }
+    .seg.active{ background:#123b8a; border-color:#3b82f6; box-shadow:0 1px 0 rgba(2,6,23,.06); }
+    .badge{
+      display:inline-block; padding:.25rem .5rem; border-radius:999px; font-size:.75rem; font-weight:700;
+      border:1px solid rgba(255,255,255,.3); margin-left:.5rem; color:#fff; background:rgba(255,255,255,.06);
+    }
+
+    /* Form */
+    label{ display:block; font-weight:700; margin:.75rem 0 .4rem; color:#fff; }
+    input[type="text"], textarea, select{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #ced4da;
+      background:#f8fafc; color:#333; font-size:14px; transition:.2s border, .2s box-shadow;
+    }
+    input[type="text"]:focus, textarea:focus, select:focus{
+      outline:none; border-color:#66a2a0; box-shadow:0 0 0 3px rgba(102,162,160,.28);
+    }
+    textarea{ min-height:140px; resize:vertical }
+    .counter{ font-size:.82rem; color:#c7d2fe; text-align:right; margin-top:.25rem; opacity:.9; }
+    .counter.bad{ color:#ffd2a6 } .counter.good{ color:#a7f3d0 }
+
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media (max-width:900px){ .row{ grid-template-columns:1fr; } }
+
+    .concurrent-block{
+      border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.06);
+      border-radius:10px; padding:14px; margin-top:12px;
+    }
+
+    /* Toolbars */
+    .toolbar{ display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:12px 0; }
+    .toolbar.bottom{ justify-content:flex-end; }
+    button{
+      background:linear-gradient(135deg, #66a2a0, #4c7b7b); color:#fff; border:none; padding:.75rem 1rem;
+      border-radius:10px; cursor:pointer; font-weight:800; font-size:.95rem;
+      transition:.18s transform, .18s box-shadow, .18s filter; box-shadow:0 8px 16px rgba(0,0,0,.18);
+    }
+    button:hover{ transform:translateY(-1px); box-shadow:0 12px 22px rgba(0,0,0,.22); }
+    .btn-ghost{ background:#fff; color:#0f172a; border:1px solid #d1d5db; box-shadow:none; }
+    .btn-ghost:hover{ border-color:#3b82f6; color:#3b82f6; }
+    .btn-danger{ background:#ef4444; box-shadow:0 8px 16px rgba(239,68,68,.35); }
+    .btn-danger:hover{ filter:saturate(1.05); }
+
+    /* Output */
+    .output-head{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      margin-top:16px; padding:10px 12px; border-radius:10px;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+    }
+    .output-title{font-weight:800;}
+    #generatedPrompt{
+      white-space:pre-wrap; background:var(--accentMono); color:#0f172a;
+      padding:14px; border-radius:10px; border:1px solid #c7dafc; margin-top:8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      max-height:560px; overflow:auto; scroll-behavior:smooth;
+    }
+    body.seo-mode .output-head{ background:#fffdfa; border-color:#ffe7b3; }
+
+    /* Toast */
+    .toast{
+      position:fixed; top:20px; left:50%; transform:translateX(-50%);
+      background:#4caf50; color:#fff; padding:10px 18px;
+      border-radius:6px; font-size:14px; opacity:0; visibility:hidden;
+      transition:opacity .3s, visibility .3s; z-index:2000;
+      box-shadow:0 6px 14px rgba(0,0,0,.2);
+    }
+    .toast.show{ opacity:1; visibility:visible; }
+
+    /* ======= Mode SEO : change le fond de la page ET celui de la carte outil ======= */
+    body.seo-mode{ background:var(--seo-bg); }
+    body.seo-mode .card{
+      background:var(--seo-card); color:var(--seo-ink); border-color:var(--seo-border);
+    }
+    body.seo-mode h1, body.seo-mode label{ color:var(--seo-ink); }
+    body.seo-mode .mode{ background:#863efa; border-color:var(--seo-border); }
+    body.seo-mode .seg{ color:#1c2b4f; }
+    body.seo-mode .seg.active{ background:#fff; border-color:var(--seo-border); }
+    body.seo-mode .badge{ background:#fff3d4; border-color:var(--seo-border); color:#0f172a; }
+    body.seo-mode .concurrent-block{ background:#fffdfa; border-color:#ffe7b3; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+<nav class="navbar">
+  <a href="index.html">Call To Action</a>
+  <a href="ctabouton.html">CTA Bouton</a>
+  <a href="nofollowcode.html">No Follow</a>
+  <a href="sourcearticle.html">Source</a>
+  <a href="promptjuridique.html">Ancien Outil</a>
+  <a href="generer-prompt.html" class="tab-btn">Générer Prompt</a>
+  <a href="openmultiurl.html" class="tab-btn">URL Multiple</a>
+</nav>
+
+  <div id="toast" class="toast">Copié ✅</div>
+
+  <main>
+    <section class="card">
+      <h1>Générateur de Prompt — SEO / GEO Juridique
+        <span id="modeBadge" class="badge">Mode : Réécriture</span>
+      </h1>
+      <div class="subtitle">Réécriture ou optimisation SEO/GEO. Ajoute aussi forums, Reddit, PAA et mots-clés pour capter les vraies intentions utilisateur.</div>
+      <div class="hr"></div>
+
+      <!-- Mode selector -->
+      <div class="mode" id="modeBox">
+        <label class="seg active" id="seg-rewrite">
+          <input type="radio" name="mode" value="rewrite" checked>
+          Analyse & Réécriture Totale
+        </label>
+        <label class="seg" id="seg-seo">
+          <input type="radio" name="mode" value="seo">
+          Optimisation SEO/GEO (retouches)
+        </label>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="articleTitle">Titre de l'article à analyser</label>
+          <input type="text" id="articleTitle" placeholder="Entrez le titre ici..."/>
+        </div>
+        <div>
+          <label for="market">Pays / marché juridique</label>
+          <select id="market">
+            <option value="Non précisé">Non précisé</option>
+            <option value="France">France</option>
+            <option value="Belgique">Belgique</option>
+            <option value="Royaume-Uni">Royaume-Uni</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="articleContent">Contenu de l'article à analyser</label>
+      <textarea id="articleContent" rows="10" placeholder="Collez ici le contenu de votre article..."></textarea>
+      <div class="counter" id="articleCounter">0 caractères</div>
+
+      <div id="concurrentsContainer"></div>
+
+      <!-- Données supplémentaires -->
+      <div style="margin-top:14px;">
+        <label for="extraInstructions">Données SEO / Ahrefs / Google (facultatif)</label>
+        <textarea id="extraInstructions" rows="6" placeholder="Colle ici les questions associées Google/PAA, mots-clés Ahrefs, recherches associées, contraintes client, liens internes à pousser, ou points juridiques à vérifier. Le format final est déjà intégré au prompt."></textarea>
+      </div>
+
+      <!-- Signaux utilisateurs -->
+      <div style="margin-top:14px;">
+        <label for="userSignals">Forums / Reddit / questions utilisateurs (facultatif)</label>
+        <textarea id="userSignals" rows="7" placeholder="Colle ici des discussions Reddit, forums, commentaires, questions d'internautes, cas concrets ou formulations naturelles. L'outil demandera d'en extraire les douleurs, intentions, angles high intent et FAQ utiles sans gonfler l'article."></textarea>
+      </div>
+
+      <!-- Toolbar du milieu : Ajouter concurrent (au-dessus des actions finales) + Reset -->
+      <div class="toolbar">
+        <button class="btn-ghost" id="btnAddCompetitor">+ Ajouter un article concurrent</button>
+        <button class="btn-danger" id="btnReset">Réinitialiser</button>
+      </div>
+
+      <!-- Résultat -->
+      <div class="output-head" id="outputHead">
+        <span class="output-title">Prompt généré</span>
+        <button class="btn-ghost" id="btnCopyTop" type="button">Copier le Prompt</button>
+      </div>
+      <div id="generatedPrompt" aria-live="polite"></div>
+
+      <!-- Toolbar tout en bas : Générer + Copier (derniers boutons) -->
+      <div class="toolbar bottom">
+        <button id="btnGenerate">Générer le Prompt</button>
+        <button class="btn-ghost" id="btnCopy">Copier le Prompt</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ====== Éléments ======
+    let competitorCount = 0;
+    const els = {
+      body: document.body,
+      modeBox: document.getElementById('modeBox'),
+      segRewrite: document.getElementById('seg-rewrite'),
+      segSEO: document.getElementById('seg-seo'),
+      modeBadge: document.getElementById('modeBadge'),
+
+      articleTitle: document.getElementById('articleTitle'),
+      market: document.getElementById('market'),
+      articleContent: document.getElementById('articleContent'),
+      articleCounter: document.getElementById('articleCounter'),
+      concurrentsContainer: document.getElementById('concurrentsContainer'),
+      btnAddCompetitor: document.getElementById('btnAddCompetitor'),
+      btnGenerate: document.getElementById('btnGenerate'),
+      btnCopy: document.getElementById('btnCopy'),
+      btnCopyTop: document.getElementById('btnCopyTop'),
+      btnReset: document.getElementById('btnReset'),
+      output: document.getElementById('generatedPrompt'),
+      extra: document.getElementById('extraInstructions'),
+      userSignals: document.getElementById('userSignals'),
+      toast: document.getElementById('toast')
+    };
+
+    // ====== Mode ======
+    function getMode(){
+      return document.querySelector('input[name="mode"]:checked')?.value || 'rewrite';
+    }
+    function setMode(mode){
+      const rewrite = mode === 'rewrite';
+      document.querySelector('input[name="mode"][value="rewrite"]').checked = rewrite;
+      document.querySelector('input[name="mode"][value="seo"]').checked = !rewrite;
+      els.segRewrite.classList.toggle('active', rewrite);
+      els.segSEO.classList.toggle('active', !rewrite);
+      els.modeBadge.textContent = 'Mode : ' + (rewrite ? 'Réécriture SEO/GEO' : 'Optimisation SEO/GEO');
+      // Fond distinct SEO : page + carte outil
+      els.body.classList.toggle('seo-mode', !rewrite);
+    }
+
+    // ====== Compteurs / concurrents ======
+    function updateCounter(){
+      const n = els.articleContent.value.length;
+      els.articleCounter.textContent = n + ' caractères';
+      els.articleCounter.className = 'counter ' + (n < 400 ? 'bad' : 'good');
+    }
+    function escapeHtml(str=''){
+      return str.replace(/[&<>"']/g, (m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+    function addCompetitor(prefillTitle='', prefillContent=''){
+      competitorCount++;
+      const id = competitorCount;
+      const block = document.createElement('div');
+      block.className = 'concurrent-block';
+      block.dataset.cid = id;
+      block.innerHTML = `
+        <div class="row">
+          <div>
+            <label for="concurrentTitle${id}">Titre de l'article concurrent ${id}</label>
+            <input type="text" id="concurrentTitle${id}" placeholder="Titre de l'article concurrent..." value="${escapeHtml(prefillTitle)}"/>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button class="btn-ghost" type="button" data-remove="${id}">Supprimer ce concurrent</button>
+          </div>
+        </div>
+        <label for="concurrentContent${id}">Contenu de l'article concurrent ${id}</label>
+        <textarea id="concurrentContent${id}" rows="6" placeholder="Collez ici le contenu...">${escapeHtml(prefillContent)}</textarea>
+      `;
+      els.concurrentsContainer.appendChild(block);
+      block.querySelector(`[data-remove="${id}"]`).addEventListener('click', ()=> block.remove());
+    }
+    function collectCompetitors(){
+      const arr = [];
+      els.concurrentsContainer.querySelectorAll('.concurrent-block').forEach(block=>{
+        const id = block.dataset.cid;
+        const t = block.querySelector(`#concurrentTitle${id}`)?.value?.trim() || '';
+        const c = block.querySelector(`#concurrentContent${id}`)?.value?.trim() || '';
+        if(t || c){ arr.push({title:t, content:c}); }
+      });
+      return arr;
+    }
+    function buildCompetitorsText(){
+      const comps = collectCompetitors();
+      if(!comps.length) return '(Aucun concurrent fourni)';
+      return comps.map((c,i)=>`---\nArticle concurrent ${i+1}\nTitre : ${c.title || '(sans titre)'}\nContenu :\n${c.content || '(vide)'}`).join('\n\n');
+    }
+
+    // ====== Templates de prompt ======
+    function formatExtra(extra){
+      return (extra && extra.trim().length>0)
+        ? `
+________________________________________
+🧩 Données SEO / Ahrefs / Google fournies par l'utilisateur
+${extra.trim()}
+` : '';
+    }
+
+    function formatUserSignals(userSignals){
+      return (userSignals && userSignals.trim().length>0)
+        ? `
+________________________________________
+🗣️ Signaux utilisateurs / forums / Reddit / commentaires
+${userSignals.trim()}
+
+Consigne : exploiter ces signaux pour repérer les douleurs réelles, questions fréquentes, formulations naturelles, objections, cas pratiques et angles high intent. Ne pas recopier les témoignages. Les transformer en recommandations SEO/GEO utiles, FAQ pertinentes et formulations plus humaines.
+` : '';
+    }
+
+    function humanWritingRules(){
+      return `________________________________________
+✍️ Style d'écriture humain obligatoire
+Quand tu proposes une reformulation, un paragraphe, une introduction, une FAQ ou une section complète, l'écriture doit rester naturelle, professionnelle et juridique.
+• Varier la longueur des phrases : certaines courtes, certaines plus développées.
+• Éviter les phrases trop uniformes, mécaniques ou génériques.
+• Garder une bonne richesse de vocabulaire sans devenir trop technique.
+• Répondre clairement, mais avec un ton humain, fluide et crédible.
+• Éviter les formulations artificielles du type “il est important de noter que” répétées partout.
+• Ne pas sur-optimiser les mots-clés. Les intégrer naturellement.
+• Ne pas produire un style robotique, publicitaire ou froid. Le contenu doit ressembler à un vrai rédacteur juridique expérimenté.`;
+    }
+
+    function commonRules(){
+      return `________________________________________
+📌 Règles obligatoires SEO/GEO/Juridique
+• Répondre directement aux intentions de recherche, sans blabla ni introduction longue.
+• Quand un H2 est une question, proposer une réponse directe dès la première phrase, puis détailler.
+• Vérifier si une réponse existe déjà dans l'introduction ou une autre section avant de proposer un ajout.
+• Éviter toute répétition entre introduction, H2, FAQ, conclusion et blocs récapitulatifs.
+• Prioriser les listes à puces pour les conditions, étapes, risques, exceptions, documents, délais, mentions obligatoires et recommandations.
+• Garder des paragraphes courts, humains et lisibles. Éviter les gros blocs.
+• Scruter les sections qui tournent en rond, ne répondent pas vraiment au H2 ou retardent la réponse utile.
+• Distinguer clairement : définition, conditions d'accès, procédure, exceptions, délais, coût, risques, rôle de l'avocat, action à faire.
+• Rendre le contenu utile à un justiciable : concret, clair, actionnable, pas seulement théorique.
+• Renforcer l'intention avocat quand c'est pertinent : expliquer quand et pourquoi consulter, sans ton publicitaire forcé.
+• Le dernier H2 recommandé doit toujours traiter le rôle de l'avocat ou le moment où consulter un avocat.
+• Pour la France : éviter “avocat spécialisé” sauf spécialisation officiellement certifiée. Préférer “avocat en…”, “avocat intervenant en…”, “avocat compétent en…”.
+• Pour FR / BE / UK : respecter le vocabulaire, les procédures et les institutions du pays concerné. Ne pas mélanger les droits.
+• Références juridiques : citer dans le corps seulement quand cela aide vraiment, puis proposer une section courte en bas de type “Les règles juridiques à vérifier” / “Le cadre légal à connaître”.
+• FAQ : maximum 5 questions. Réponses très directes, 1 à 2 phrases maximum. Si un lien interne est utile, répondre d'abord puis proposer le lien. Ne jamais mettre uniquement un lien.
+• GEO : phrases claires, extractibles, sans blabla. Les réponses doivent pouvoir être reprises par Google AI Overview, ChatGPT, Gemini ou Perplexity.
+• Ne pas copier les concurrents : identifier ce qu'ils font mieux, puis proposer une version plus utile, plus juridique et plus high intent.`;
+    }
+
+    function rewriteOutputFormat(){
+      return `________________________________________
+📌 FORMAT DE RÉPONSE OBLIGATOIRE — RÉÉCRITURE
+Réponds uniquement avec ce format simple, prêt à transférer aux rédacteurs. Pas de longues analyses avant/après. Pas de pavé.
+
+1- Axe éditorial
+Mettre en avant : …
+Objectif : High intent → inciter à consulter un avocat.
+
+2- Table des matières optimisée (6 à 8 H2 maximum)
+Contraintes obligatoires :
+• Chaque H2 doit être formulé sous forme de question.
+• Chaque H2 doit traiter une seule question. Ne jamais mettre deux intentions dans un même H2.
+• Éviter les titres trop longs, les parenthèses inutiles et les détails lourds dans les H2.
+• Ne pas créer de H2 redondant avec l'introduction ou avec une FAQ.
+• Le dernier H2 doit toujours porter sur le rôle de l'avocat / quand consulter un avocat.
+
+Format attendu :
+H2-[titre 1 sous forme de question]
+H2-[titre 2 sous forme de question]
+H2-[titre 3 sous forme de question]
+H2-[titre 4 sous forme de question]
+H2-[titre 5 sous forme de question]
+H2-[titre 6 sous forme de question]
+
+FAQ : 3 à 5 questions maximum
+• Proposer uniquement des FAQ utiles qui ne répètent pas les H2.
+• Si une question est déjà traitée par un H2, ne pas la remettre en FAQ.
+• Chaque FAQ doit avoir une réponse directe de 1 à 2 phrases maximum.
+• Utiliser les recherches associées, PAA, forums ou questions longue traîne si elles sont fournies.
+
+3- Mots-clés SEO prioritaires
+[mots-clés séparés par des virgules]
+
+Important : si une information mérite une correction critique (juridique, répétition, section à supprimer), l'intégrer dans “Mettre en avant” ou dans les H2 proposés. Ne pas ajouter de section supplémentaire sauf demande explicite.`;
+    }
+
+    function seoOutputFormat(){
+      return `________________________________________
+📌 FORMAT DE RÉPONSE OBLIGATOIRE — OPTIMISATION
+Réponds avec une structure de retouches concrètes, pas avec le format de réécriture totale. Le résultat doit être clair, actionnable et facile à donner aux rédacteurs.
+
+1- Diagnostic rapide
+• Intent actuel : Low / Medium / High
+• Problème principal : …
+• Objectif : High intent → inciter à consulter un avocat.
+
+2- Optimisations prioritaires à faire
+Donner 5 à 10 actions maximum. Pour chaque action, utiliser ce format :
+• Section concernée : [Intro / H2 / H3 / FAQ / conclusion / autre]
+• Problème : [répétition, blabla, réponse trop lente, manque juridique, phrase risquée, données datées, mauvais CTA, etc.]
+• Action recommandée : [supprimer / raccourcir / fusionner / reformuler / déplacer / ajouter]
+• Proposition de correction : [phrase, paragraphe ou liste prête à utiliser si nécessaire]
+
+3- Structure Hn à ajuster si nécessaire
+• Lister uniquement les H2/H3 à renommer, supprimer, fusionner ou déplacer.
+• Ne jamais proposer deux questions dans un seul H2.
+• Si la structure actuelle est bonne, écrire : “Structure globale à conserver”.
+• Le dernier H2 doit traiter le rôle de l'avocat / quand consulter un avocat.
+
+4- FAQ recommandée
+• 3 à 5 questions maximum.
+• Réponses directes, 1 à 2 phrases maximum.
+• Ne pas reprendre une question déjà traitée par un H2.
+• Utiliser les forums, Reddit, PAA ou recherches associées si fournis.
+
+5- Mots-clés SEO prioritaires
+[mots-clés séparés par des virgules]
+
+Important : l'objectif n'est pas de refaire tout l'article. Il faut identifier ce qui doit vraiment être modifié, comme dans un audit éditorial SEO/GEO précis.`;
+    }
+
+    function tmplRewrite({title, market, content, comps, extra, userSignals}){
+      const extraBlock = formatExtra(extra);
+      const userSignalsBlock = formatUserSignals(userSignals);
+      return `✅ PROMPT — BRIEF RÉÉCRITURE SEO/GEO (ARTICLE JURIDIQUE JUSTIFIT)
+
+Tu agis comme un expert senior en SEO, GEO, rédaction juridique et stratégie de conversion avocat.
+Ta mission : analyser l'article Justifit, le comparer aux concurrents, exploiter les signaux utilisateurs fournis, puis produire un brief court et directement exploitable par les rédacteurs pour une réécriture totale.
+
+Marché juridique : ${market || 'Non précisé'}
+
+${commonRules()}
+
+${humanWritingRules()}
+
+${rewriteOutputFormat()}
+
+________________________________________
+🔍 Article Justifit à analyser
+Titre : ${title || '(sans titre)'}
+Contenu :
+${content || '(vide)'}
+
+________________________________________
+📎 Articles concurrents à dépasser
+${comps}
+
+${extraBlock}${userSignalsBlock}
+________________________________________
+🎯 Consignes d'analyse avant de produire le format final
+Analyse discrètement :
+• l'intention actuelle et l'intention cible : Low / Medium / High ;
+• ce que les concurrents abordent de plus utile juridiquement ;
+• ce que les forums/Reddit/questions utilisateurs révèlent sur les douleurs réelles ;
+• les manques : conditions, exceptions, délais, risques, démarches, rôle de l'avocat ;
+• les répétitions à éviter dans la future structure ;
+• les H2 qui doivent répondre à une vraie intention utilisateur ;
+• les FAQ à garder seulement si elles ne doublonnent pas les H2 ;
+• les mots-clés prioritaires à intégrer naturellement ;
+• les références juridiques utiles à citer ou à regrouper en bas d'article.
+
+Puis donne uniquement le résultat final dans le FORMAT DE RÉPONSE OBLIGATOIRE.`;
+    }
+
+    function tmplSEO({title, market, content, comps, extra, userSignals}){
+      const extraBlock = formatExtra(extra);
+      const userSignalsBlock = formatUserSignals(userSignals);
+      return `✅ PROMPT — AUDIT OPTIMISATION SEO/GEO (RETOUCHES ARTICLE JURIDIQUE JUSTIFIT)
+
+Tu agis comme un expert senior en SEO, GEO, rédaction juridique et optimisation de contenus Justifit.
+Objectif : produire un audit de retouches clair, précis et directement exploitable par les rédacteurs pour améliorer l'article existant sans tout réécrire, sauf si la réécriture totale est indispensable.
+
+Marché juridique : ${market || 'Non précisé'}
+
+${commonRules()}
+
+${humanWritingRules()}
+
+${seoOutputFormat()}
+
+________________________________________
+🔍 Article Justifit à optimiser
+Titre : ${title || '(sans titre)'}
+Contenu :
+${content || '(vide)'}
+
+________________________________________
+📎 Concurrents / références à dépasser
+${comps}
+
+${extraBlock}${userSignalsBlock}
+________________________________________
+🎯 Consignes d'analyse avant de produire le format final
+Analyse discrètement :
+• les retouches prioritaires à faire sur l'article existant ;
+• les sections à supprimer, fusionner, déplacer ou raccourcir ;
+• les phrases qui ne répondent pas vraiment au H2 ou qui tournent en rond ;
+• les répétitions entre introduction, H2, FAQ, conclusion et blocs récapitulatifs ;
+• les H2 à renommer pour être plus SEO/GEO ;
+• les réponses qui doivent être reformulées pour être plus directes, plus humaines et plus extractibles ;
+• les points juridiques manquants, imprécis, datés ou risqués ;
+• les opportunités high intent avocat ;
+• les signaux forums/Reddit à transformer en FAQ ou angles de réassurance ;
+• les FAQ réellement utiles, sans doublon avec les H2 ;
+• les mots-clés prioritaires à intégrer naturellement.
+
+Si l'article est vraiment à réécrire totalement, commence le champ “Problème principal” par : ⚠️ À réécrire totalement — puis donne 2 à 3 raisons courtes.
+
+Puis donne uniquement le résultat final dans le FORMAT DE RÉPONSE OBLIGATOIRE.`;
+    }
+
+    // ====== Génération ======
+    function generatePrompt(){
+      const mode = getMode();
+      const title = els.articleTitle.value.trim();
+      const market = els.market.value;
+      const content = els.articleContent.value.trim();
+      const extra = els.extra.value;
+      const userSignals = els.userSignals.value;
+
+      if(!title) showToast('Ajoute au moins un titre pour cadrer l’analyse.');
+      if(content.length < 200) showToast('Le contenu est très court : vise ≥ 400 caractères pour une analyse pertinente.');
+
+      const comps = buildCompetitorsText();
+      const payload = { title, market, content, comps, extra, userSignals };
+      const out = (mode === 'seo') ? tmplSEO(payload) : tmplRewrite(payload);
+      els.output.textContent = out;
+      document.getElementById('outputHead').scrollIntoView({behavior:'smooth', block:'center'});
+    }
+
+    // ====== UI ======
+    function showToast(msg){
+      els.toast.textContent = msg || 'OK';
+      els.toast.classList.add('show');
+      setTimeout(()=> els.toast.classList.remove('show'), 1400);
+    }
+
+    // ====== Événements ======
+    els.btnAddCompetitor.addEventListener('click', ()=> addCompetitor());
+    els.btnGenerate.addEventListener('click', generatePrompt);
+    function copyPrompt(){
+      const txt = els.output.textContent.trim();
+      if(!txt){ showToast('Aucun prompt à copier.'); return; }
+      navigator.clipboard.writeText(txt).then(()=> showToast('Copié dans le presse‑papiers ✅'))
+      .catch(()=>{
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = txt; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); showToast('Copié dans le presse‑papiers ✅'); }catch(e){}
+        ta.remove();
+      });
+    }
+    els.btnCopy.addEventListener('click', copyPrompt);
+    els.btnCopyTop.addEventListener('click', copyPrompt);
+    els.btnReset.addEventListener('click', ()=>{
+      els.articleTitle.value = '';
+      els.market.value = 'Non précisé';
+      els.articleContent.value = '';
+      els.extra.value = '';
+      els.userSignals.value = '';
+      els.output.textContent = '';
+      els.concurrentsContainer.innerHTML = '';
+      competitorCount = 0;
+      addCompetitor();
+      updateCounter();
+      setMode('rewrite');
+      showToast('Réinitialisé ✅');
+    });
+    els.articleContent.addEventListener('input', updateCounter);
+    els.modeBox.addEventListener('click', (e)=>{
+      const label = e.target.closest('.seg');
+      if(!label) return;
+      const mode = (label===els.segRewrite) ? 'rewrite' : 'seo';
+      setMode(mode);
+    });
+
+    // ====== Init ======
+    (function init(){
+      addCompetitor();
+      updateCounter();
+    })();
+  </script>
+  <!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+  window.JF_CHAT_CONFIG = {
+    room: "JUSTIFIT-AIDE",
+    firebaseConfig: {
+      apiKey: "AIzaSyDMTIVwbD7--cp504S8ViLQL7l-8AXPyJg",
+      authDomain: "outiljustifit.firebaseapp.com",
+      databaseURL: "https://outiljustifit-default-rtdb.firebaseio.com",
+      projectId: "outiljustifit",
+      storageBucket: "outiljustifit.firebasestorage.app",
+      messagingSenderId: "581082282504",
+      appId: "1:581082282504:web:2f1d3a3e7a8fbe5119efbd"
+    },
+       notificationSoundUrl: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"
+  };
+</script>
+
+<link rel="stylesheet" href="chat-widget.css">
+<script src="chat-widget.js"></script>
+</body>
+</html>
